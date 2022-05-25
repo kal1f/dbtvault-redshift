@@ -9,3 +9,7 @@
 {%- macro sqlserver__type_timestamp() -%}
     datetime2
 {%- endmacro -%}
+
+{%- macro redshift__type_timestamp() -%}
+    timestamp
+{%- endmacro -%}

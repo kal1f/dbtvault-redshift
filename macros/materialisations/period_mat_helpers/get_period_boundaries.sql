@@ -107,3 +107,34 @@
 
     {% do return(period_boundaries) %}
 {%- endmacro %}
+
+
+
+
+{% macro redshift__get_period_boundaries(target_schema, target_table, timestamp_field, start_date, stop_date, period) -%}
+
+    {% set period_boundary_sql -%}
+        WITH period_data AS (
+            SELECT
+                CAST(COALESCE(MAX({{ timestamp_field }}), CAST('{{ start_date }}' AS TIMESTAMP)) AS TIMESTAMP) AS start_timestamp,
+                COALESCE({{ dbt_utils.dateadd('millisecond', 86399999, "CAST(NULLIF('" ~ start_date | lower ~ "','none') AS TIMESTAMP)") }},
+                         {{ dbtvault.current_timestamp() }} ) AS stop_timestamp
+            FROM {{ target_schema }}.{{ target_table }}
+        )
+        SELECT
+            start_timestamp,
+            stop_timestamp,
+            {{ dbt_utils.datediff('start_timestamp',
+                                  'stop_timestamp',
+                                  period) }} + 1 AS num_periods
+        FROM period_data
+    {%- endset %}
+
+    {% set period_boundaries_dict = dbtvault.get_query_results_as_dict(period_boundary_sql) %}
+
+    {% set period_boundaries = {'start_timestamp': period_boundaries_dict['START_TIMESTAMP'][0] | string,
+                                'stop_timestamp': period_boundaries_dict['STOP_TIMESTAMP'][0] | string,
+                                'num_periods': period_boundaries_dict['NUM_PERIODS'][0] | int} %}
+
+    {% do return(period_boundaries) %}
+{%- endmacro %}

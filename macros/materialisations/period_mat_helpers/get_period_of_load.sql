@@ -57,3 +57,19 @@
 
     {% do return(period_of_load) %}
 {%- endmacro -%}
+
+
+
+
+{%- macro redshift__get_period_of_load(period, offset, start_timestamp) -%}
+
+    {% set period_of_load_sql -%}
+        SELECT DATEADD({{ period }}, DATEDIFF({{period}}, 0, DATEADD({{ period }}, {{ offset }}, CAST('{{ start_timestamp }}' AS TIMESTAMP))), 0) AS period_of_load
+    {%- endset %}
+
+    {% set period_of_load_dict = dbtvault.get_query_results_as_dict(period_of_load_sql) %}
+
+    {% set period_of_load = period_of_load_dict['PERIOD_OF_LOAD'][0] | string %}
+
+    {% do return(period_of_load) %}
+{%- endmacro -%}

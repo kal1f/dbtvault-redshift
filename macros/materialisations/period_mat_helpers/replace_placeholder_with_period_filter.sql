@@ -60,3 +60,19 @@
 
     {% do return(filtered_sql) %}
 {% endmacro %}
+
+
+
+{% macro redshift__replace_placeholder_with_period_filter(core_sql, timestamp_field, start_timestamp, stop_timestamp, offset, period) %}
+
+
+    {%- set period_filter -%}
+            (CAST({{ timestamp_field }} AS DATE) >= DATEADD({{ period }}, DATEDIFF({{ period }}, 0, DATEADD({{ period }}, {{ offset }}, CAST('{{ start_timestamp }}' AS TIMESTAMP))), 0) AND
+             CAST({{ timestamp_field }} AS DATE) < DATEADD({{ period }}, 1, DATEADD({{ period }}, {{ offset }}, CAST('{{ start_timestamp }}' AS TIMESTAMP)))
+      AND (CAST({{ timestamp_field }} AS DATE) >= CAST('{{ start_timestamp_mssql }}' AS DATE)))
+    {%- endset -%}
+
+    {%- set filtered_sql = core_sql | replace("__PERIOD_FILTER__", period_filter) -%}
+
+    {% do return(filtered_sql) %}
+{% endmacro %}

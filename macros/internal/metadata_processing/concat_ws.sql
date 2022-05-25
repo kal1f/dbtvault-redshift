@@ -20,3 +20,9 @@
     {{- '\n)' -}}
 
 {%- endmacro -%}
+
+{%- macro redshift__concat_ws(string_list, separator="||") -%}
+
+    {{ fields|join(' || ') }}
+
+{%- endmacro -%}
